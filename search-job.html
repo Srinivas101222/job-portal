@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Browse Jobs - Job Portal</title>
+  <link rel="icon" type="image/png" href="Images/icon.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, sans-serif;
+      background: url("Images/bg2.jpg") no-repeat center center fixed;
+      background-size: cover;
+      padding: 20px;
+    }
+
+    .background-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: -1;
+    }
+
+    .user-profile-header {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #4B3621;
+    }
+
+    .search-bar {
+      max-width: 600px;
+      margin: 20px auto;
+    }
+
+    .job-card {
+      border: 1px solid #e9edf0;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      background-color: #f8f9fa;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .job-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #4B3621;
+    }
+
+    .job-meta {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    .view-btn, .apply-btn {
+      border: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: white;
+    }
+
+    .view-btn {
+      background-color: #A9746E;
+    }
+
+    .view-btn:hover {
+      background-color: #4B3621;
+    }
+
+    .apply-btn {
+      background-color: #4B3621;
+    }
+
+    .apply-btn:hover {
+      background-color: #A9746E;
+    }
+
+    .btn-coffee {
+      background: linear-gradient(to right, #4B3621, #A9746E);
+      color: #fff;
+      border: none;
+      font-weight: 500;
+    }
+
+    .container-main {
+      display: flex;
+      gap: 1rem;
+      margin-top: 20px;
+    }
+
+    #jobsContainer {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 1rem;
+      max-height: 70vh;
+    }
+
+    #jobDescriptionPanel {
+      flex: 1;
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+      display: none;
+      max-height: 70vh;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="background-overlay"></div>
+  
+  <div class="container">
+    <!-- User Profile Header -->
+    <div class="user-profile-header">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center">
+            <img id="userAvatar" src="" alt="Profile" class="profile-avatar me-3">
+            <div>
+              <h5 id="userName" class="mb-0 text-dark">Welcome, User</h5>
+              <small id="userRole" class="text-muted">Job Seeker</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 text-end">
+          <a href="user-profile.html" class="btn btn-coffee btn-sm me-2">
+            <i class="bi bi-person-circle"></i> My Profile
+          </a>
+          <a href="applied-job.html" class="btn btn-coffee btn-sm me-2">
+            <i class="bi bi-briefcase"></i> Applied Jobs
+          </a>
+          <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="text-center mb-4 text-white">BROWSE AVAILABLE JOBS</h2>
+
+    <div class="search-bar">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search by title, company, or location...">
+    </div>
+
+    <div class="container container-main">
+      <div id="jobsContainer"></div>
+      <div id="jobDescriptionPanel">
+        <h4 id="descTitle" style="font-weight: bold;"></h4>
+        <p id="descCompany"></p>
+        <p id="descLocation"></p>
+        <p id="descSalary"></p>
+        <hr>
+        <p id="descFull" style="white-space: pre-wrap;"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+    const jobsContainer = document.getElementById("jobsContainer");
+    const searchInput = document.getElementById("searchInput");
+    let currentlyViewingJobId = null;
+
+    // Check authentication
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      
+      if (!currentUser || currentUser.role !== 'jobseeker') {
+        alert('Access denied. Please login as a job seeker.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Load user profile data
+      document.getElementById('userAvatar').src = currentUser.avatar || 'Images/default-avatar.png';
+      document.getElementById('userName').textContent = `Welcome, ${currentUser.profile?.fullName || currentUser.username}`;
+      document.getElementById('userRole').textContent = 'Job Seeker';
+
+      // Logout functionality
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      });
+
+      displayJobs(jobs);
+    });
+
+    function displayJobs(filteredJobs) {
+      jobsContainer.innerHTML = "";
+
+      if (filteredJobs.length === 0) {
+        jobsContainer.innerHTML = "<p class='text-center text-light'>No jobs found.</p>";
+        return;
+      }
+
+      filteredJobs.forEach(job => {
+        const jobCard = document.createElement("div");
+        jobCard.className = "job-card";
+        jobCard.innerHTML = `
+          <div class="job-title">${job.title}</div>
+          <div class="job-meta">${job.company} | ${job.location} | Rs.${job.salary}</div>
+          <p class="text-muted">${job.contact}</p>
+          <button class="apply-btn" onclick="applyJob(${job.id})">Apply</button>
+          <button class="view-btn" onclick='viewJobDetails(${JSON.stringify(job)})'>View Details</button>
+        `;
+        jobsContainer.appendChild(jobCard);
+      });
+    }
+
+    function viewJobDetails(job) {
+      const panel = document.getElementById("jobDescriptionPanel");
+      const title = document.getElementById("descTitle");
+      const company = document.getElementById("descCompany");
+      const location = document.getElementById("descLocation");
+      const salary = document.getElementById("descSalary");
+      const full = document.getElementById("descFull");
+
+      title.textContent = job.title;
+      company.textContent = `Company: ${job.company}`;
+      location.textContent = `Location: ${job.location}`;
+      salary.textContent = `Salary: Rs. ${job.salary}`;
+      full.textContent = job.description;
+
+      panel.style.display = "block";
+      currentlyViewingJobId = job.id;
+    }
+
+    function applyJob(id) {
+      localStorage.setItem("selectedJobId", id);
+      window.location.href = "apply-job.html";
+    }
+
+    function filterAndDisplay() {
+      const keyword = searchInput.value.toLowerCase();
+      const filtered = jobs.filter(job =>
+        job.title.toLowerCase().includes(keyword) ||
+        job.company.toLowerCase().includes(keyword) ||
+        job.location.toLowerCase().includes(keyword)
+      );
+      displayJobs(filtered);
+    }
+
+    searchInput.addEventListener("input", filterAndDisplay);
+  </script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Application Details - Job Portal</title>
+  <link rel="icon" type="image/png" href="Images/icon.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, sans-serif;
+      background: url("Images/appliedjob.jpg") center/cover no-repeat fixed #f5f2ed;
+      padding: 2rem;
+    }
+
+    .background-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(3, 3, 3, 0.688);
+      z-index: 0;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .user-profile-header {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .profile-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #4B3621;
+    }
+
+    .info-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 16px;
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .info-card h3 {
+      font-weight: bold;
+      margin-bottom: 20px;
+      color: #4B3621;
+      border-bottom: 2px solid #4B3621;
+      padding-bottom: 10px;
+    }
+
+    .info-card p {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #4B3621;
+    }
+
+    .btn-coffee {
+      background: linear-gradient(to right, #4B3621, #A9746E);
+      color: #fff;
+      border: none;
+      font-weight: 500;
+    }
+
+    .btn-coffee:hover {
+      background: linear-gradient(to right, #3b281b, #86534e);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="background-overlay"></div>
+  <div class="content">
+    <div class="container mt-4">
+      
+      <!-- User Profile Header -->
+      <div class="user-profile-header">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <div class="d-flex align-items-center">
+              <img id="userAvatar" src="" alt="Profile" class="profile-avatar me-3">
+              <div>
+                <h5 id="userName" class="mb-0 text-dark">Application Details</h5>
+                <small id="userRole" class="text-muted">Job Seeker</small>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6 text-end">
+            <a href="applied-job.html" class="btn btn-coffee btn-sm me-2">
+              <i class="bi bi-arrow-left"></i> Back to Applications
+            </a>
+            <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="row justify-content-center">
+        <div class="col-md-8">
+          <div class="info-card" id="applicantDetails">
+            <h3>Application Information</h3>
+            <p><span class="label">Job Title:</span> <span id="jobTitle"></span></p>
+            <p><span class="label">Company:</span> <span id="companyName"></span></p>
+            <p><span class="label">Location:</span> <span id="jobLocation"></span></p>
+            <hr>
+            <p><span class="label">Applicant Name:</span> <span id="applicantName"></span></p>
+            <p><span class="label">Email:</span> <span id="applicantEmail"></span></p>
+            <p><span class="label">Phone:</span> <span id="applicantPhone"></span></p>
+            <p><span class="label">Address:</span> <span id="address"></span></p>
+            <p><span class="label">Resume:</span> <span id="resume"></span></p>
+            <p><span class="label">Applied Date:</span> <span id="appliedDate"></span></p>
+            <p><span class="label">Application Status:</span> <span class="status-pending">Pending Review</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Check authentication
+    document.addEventListener('DOMContentLoaded', function() {
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      
+      if (!currentUser || currentUser.role !== 'jobseeker') {
+        alert('Access denied. Please login as a job seeker.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Load user profile data
+      document.getElementById('userAvatar').src = currentUser.avatar || 'Images/default-avatar.png';
+      document.getElementById('userName').textContent = `Welcome, ${currentUser.profile?.fullName || currentUser.username}`;
+      document.getElementById('userRole').textContent = 'Job Seeker';
+
+      // Logout functionality
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        localStorage.removeItem('currentUser');
+        window.location.href = 'login.html';
+      });
+
+      // Load application details
+      const viewId = localStorage.getItem("viewApplicationId");
+      const applicants = JSON.parse(localStorage.getItem("applicants")) || [];
+      const app = applicants.find(a => a.appliedAt == viewId && a.userId === currentUser.id);
+
+      if (app) {
+        document.getElementById("jobTitle").textContent = app.jobTitle;
+        document.getElementById("companyName").textContent = app.company;
+        document.getElementById("jobLocation").textContent = app.location;
+        document.getElementById("applicantName").textContent = app.name;
+        document.getElementById("applicantEmail").textContent = app.email;
+        document.getElementById("applicantPhone").textContent = app.phone;
+        document.getElementById("address").textContent = app.address;
+        document.getElementById("resume").textContent = app.resume;
+        document.getElementById("appliedDate").textContent = new Date(app.appliedAt).toLocaleString();
+      } else {
+        document.getElementById("applicantDetails").innerHTML = 
+          "<p class='text-center text-muted'>No application data found or access denied.</p>";
+      }
+    });
+  </script>
+</body>
+</html>

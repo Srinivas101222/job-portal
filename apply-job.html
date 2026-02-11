@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Apply For Job</title>
+  <link rel="icon" href="Images/icon.png" type="image/png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    body {
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, sans-serif;
+      background: url("Images/applyjob.jpg") center/cover no-repeat fixed #f5f2ed;
+      padding: 2rem;
+    }
+
+    .background-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.688);
+      z-index: 0;
+    }
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+    .form-container {
+      max-width: 600px;
+      margin: auto;
+      background: hsl(0, 2%, 90%);
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #4B3621;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: linear-gradient(to right, #4B3621, #A9746E);
+      color: #fff;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 5px;
+      font-weight: bold;
+      width: 100%;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      box-shadow: 0 4px 12px rgba(75,54,33,0.4);
+      transform: scale(1.02);
+    }
+
+    .user-profile-header {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .profile-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #4B3621;
+    }
+  </style>
+</head>
+<body>
+<div class="background-overlay"></div>
+<div class="content">
+  
+  <!-- User Profile Header -->
+  <div class="user-profile-header">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center">
+          <img id="userAvatar" src="" alt="Profile" class="profile-avatar me-3">
+          <div>
+            <h5 id="userName" class="mb-0 text-dark">Welcome, User</h5>
+            <small id="userRole" class="text-muted">Job Seeker</small>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 text-end">
+        <a href="search-job.html" class="btn btn-sm btn-outline-secondary me-2">
+          <i class="bi bi-arrow-left"></i> Back to Jobs
+        </a>
+        <button id="logoutBtn" class="btn btn-sm btn-outline-danger">
+          <i class="bi bi-box-arrow-right"></i> Logout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-container">
+    <h2>Apply for <span id="jobTitleDisplay">Job</span></h2>
+    <form id="applicationForm">
+      <div class="form-group">
+        <label for="applicantName">Full Name</label>
+        <input type="text" id="applicantName" name="applicantName" required>
+      </div>
+      <div class="form-group">
+        <label for="applicantEmail">Email</label>
+        <input type="email" id="applicantEmail" name="applicantEmail" required>
+      </div>
+      <div class="form-group">
+        <label for="applicantPhone">Phone Number</label>
+        <input type="tel" id="applicantPhone" name="applicantPhone" required>
+      </div>
+      <div class="form-group">
+        <label for="address">Address</label>
+        <textarea id="address" name="address" rows="4" required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="resume">Upload Resume</label>
+        <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required>
+      </div>
+      <button type="submit">Submit Application</button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Check authentication
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    
+    if (!currentUser || currentUser.role !== 'jobseeker') {
+      alert('Access denied. Please login as a job seeker.');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Load user profile data
+    document.getElementById('userAvatar').src = currentUser.avatar || 'Images/default-avatar.png';
+    document.getElementById('userName').textContent = `Welcome, ${currentUser.profile?.fullName || currentUser.username}`;
+    document.getElementById('userRole').textContent = 'Job Seeker';
+
+    // Pre-fill form with user data
+    document.getElementById('applicantName').value = currentUser.profile?.fullName || '';
+    document.getElementById('applicantEmail').value = currentUser.email || '';
+    document.getElementById('applicantPhone').value = currentUser.profile?.phone || '';
+    document.getElementById('address').value = currentUser.profile?.address || '';
+
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    });
+
+    // Load job details
+    const jobId = localStorage.getItem("selectedJobId");
+    const jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+    const job = jobs.find(j => j.id == jobId);
+    if (job) {
+      document.getElementById("jobTitleDisplay").textContent = job.title;
+    }
+  });
+
+  document.getElementById("applicationForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const jobId = localStorage.getItem("selectedJobId");
+    const jobs = JSON.parse(localStorage.getItem("jobs")) || [];
+    const job = jobs.find(j => j.id == jobId);
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    const applicantInfo = {
+      jobId: job.id,
+      jobTitle: job.title,
+      company: job.company,
+      location: job.location,
+      name: document.getElementById("applicantName").value,
+      email: document.getElementById("applicantEmail").value,
+      phone: document.getElementById("applicantPhone").value,
+      address: document.getElementById("address").value,
+      resume: document.getElementById("resume").files[0]?.name || "No file uploaded",
+      appliedAt: Date.now(),
+      userId: currentUser.id
+    };
+
+    const applicants = JSON.parse(localStorage.getItem("applicants")) || [];
+    applicants.push(applicantInfo);
+    localStorage.setItem("applicants", JSON.stringify(applicants));
+
+    const appliedJobs = JSON.parse(localStorage.getItem("appliedJobs")) || [];
+    if (!appliedJobs.find(j => j.id == jobId)) {
+      appliedJobs.push(job);
+      localStorage.setItem("appliedJobs", JSON.stringify(appliedJobs));
+    }
+
+    // Send notification
+    sendApplicationNotification(applicantInfo);
+
+    alert("Application submitted successfully! A confirmation has been sent.");
+    window.location.href = "search-job.html";
+  });
+
+  function sendApplicationNotification(application) {
+    const notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+    
+    const notification = {
+      id: Date.now(),
+      userId: application.userId,
+      type: 'application_confirmation',
+      title: 'Application Submitted',
+      message: `Your application for ${application.jobTitle} at ${application.company} has been submitted successfully.`,
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+    
+    notifications.push(notification);
+    localStorage.setItem('notifications', JSON.stringify(notifications));
+    
+    console.log(`Application confirmation for ${application.jobTitle}`);
+  }
+</script>
+</body>
+</html>

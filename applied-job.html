@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Applied Jobs - Job Portal</title>
+  <link rel="icon" type="image/png" href="Images/icon.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <style>
+    body {
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, sans-serif;
+      background: url("Images/appliedjob.jpg") center/cover no-repeat fixed #f5f2ed;
+      padding: 2rem;
+    }
+
+    .background-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(3, 3, 3, 0.688);
+      z-index: 0;
+    }
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .user-profile-header {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+
+    .profile-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      border: 2px solid #4B3621;
+    }
+
+    .btn-coffee {
+      background: linear-gradient(to right, #4B3621, #A9746E);
+      color: #fff;
+      border: none;
+      font-weight: 500;
+    }
+
+    .application-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .status-pending {
+      color: #856404;
+      background-color: #fff3cd;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+    }
+
+    .status-reviewed {
+      color: #004085;
+      background-color: #cce5ff;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+<div class="background-overlay"></div>
+<div class="content">
+  <div class="container mt-4">
+    
+    <!-- User Profile Header -->
+    <div class="user-profile-header">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center">
+            <img id="userAvatar" src="" alt="Profile" class="profile-avatar me-3">
+            <div>
+              <h5 id="userName" class="mb-0 text-dark">My Applications</h5>
+              <small id="userRole" class="text-muted">Job Seeker</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 text-end">
+          <a href="search-job.html" class="btn btn-coffee btn-sm me-2">
+            <i class="bi bi-search"></i> Browse Jobs
+          </a>
+          <button id="logoutBtn" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-box-arrow-right"></i> Logout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="mb-4 text-white">Jobs You Have Applied For</h2>
+    <div id="appliedJobsContainer" class="row"></div>
+  </div>
+</div>
+
+<script>
+  // Check authentication
+  document.addEventListener('DOMContentLoaded', function() {
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    
+    if (!currentUser || currentUser.role !== 'jobseeker') {
+      alert('Access denied. Please login as a job seeker.');
+      window.location.href = 'login.html';
+      return;
+    }
+
+    // Load user profile data
+    document.getElementById('userAvatar').src = currentUser.avatar || 'Images/default-avatar.png';
+    document.getElementById('userName').textContent = `Welcome, ${currentUser.profile?.fullName || currentUser.username}`;
+    document.getElementById('userRole').textContent = 'Job Seeker';
+
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      localStorage.removeItem('currentUser');
+      window.location.href = 'login.html';
+    });
+
+    displayAppliedJobs();
+  });
+
+  function displayAppliedJobs() {
+    const container = document.getElementById("appliedJobsContainer");
+    const applicants = JSON.parse(localStorage.getItem("applicants")) || [];
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+    // Filter applications for current user only
+    const userApplications = applicants.filter(app => app.userId === currentUser.id);
+
+    container.innerHTML = "";
+
+    if (userApplications.length === 0) {
+      container.innerHTML = `
+        <div class="col-12">
+          <div class="application-card text-center">
+            <h4>No Applications Yet</h4>
+            <p class="text-muted">You haven't applied to any jobs yet.</p>
+            <a href="search-job.html" class="btn btn-coffee">Browse Jobs</a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    userApplications.forEach(app => {
+      const card = document.createElement("div");
+      card.classList.add("col-md-6", "mb-4");
+      card.innerHTML = `
+        <div class="application-card">
+          <h5 class="card-title">${app.jobTitle}</h5>
+          <p class="card-text"><strong>${app.company}</strong> - ${app.location}</p>
+          <p class="text-muted"><small>Applied on: ${new Date(app.appliedAt).toLocaleDateString()}</small></p>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="status-pending">Pending Review</span>
+            <div>
+              <button class="btn btn-outline-primary btn-sm me-2" onclick="viewApplication(${app.appliedAt})">View</button>
+              <button class="btn btn-outline-danger btn-sm" onclick="cancelApplication(${app.appliedAt})">Cancel</button>
+            </div>
+          </div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  function viewApplication(appliedAt) {
+    localStorage.setItem("viewApplicationId", appliedAt);
+    window.location.href = "info.html";
+  }
+
+  function cancelApplication(appliedAt) {
+    if (confirm("Are you sure you want to cancel this application?")) {
+      let applicants = JSON.parse(localStorage.getItem("applicants")) || [];
+      const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+      
+      // Only remove applications belonging to current user
+      applicants = applicants.filter(app => !(app.appliedAt === appliedAt && app.userId === currentUser.id));
+      localStorage.setItem("applicants", JSON.stringify(applicants));
+      
+      displayAppliedJobs();
+    }
+  }
+</script>
+</body>
+</html>
